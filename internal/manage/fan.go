@@ -1,7 +1,6 @@
 package manage
 
 import (
-	"fmt"
 	"linux-mac-fan-control/internal/util"
 	"os"
 	"strconv"
@@ -77,7 +76,6 @@ func (self *fan) ToggleControl() {
 		toWrite = "0"
 		self.manual = false
 	}
-	fmt.Println("manual before:", string(status), "after:", self.manual)
 	_ = os.WriteFile(fileName, []byte(toWrite), 0644)
 }
 
