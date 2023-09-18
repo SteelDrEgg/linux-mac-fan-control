@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/viper"
 	"strconv"
@@ -58,7 +59,7 @@ func loadConfig() {
 		} else if mode == "TempRPM" {
 			Mode = Modes.TempRPM
 		} else {
-			panic("Incorrect config at 'Mode'")
+			panic(errors.New("Incorrect config at 'Mode'"))
 		}
 	} else {
 		panic("Incorrect config, missing 'Mode'")
