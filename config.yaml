@@ -1,0 +1,24 @@
+Interval: 1000
+
+Mode: TempPercent
+
+FixedPercent: 80
+FixedRPM: 5000
+
+TempPercent:
+  - fan: 1
+    10: 10
+    30: 20
+    40: 80
+    50: 50
+    80: 100
+  - fan: 2
+    10: 20
+    50: 60
+    80: 100
+
+TempRPM:
+  - fan: 1
+    10: 2000
+    50: 4500
+    80: 5000
