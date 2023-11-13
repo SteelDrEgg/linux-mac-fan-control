@@ -23,7 +23,7 @@ func main() {
 	fmt.Println(helpMsg)
 	go run(quit, &fans)
 	var ipt string
-mainLoop:
+	mainLoop:
 	for true {
 		fmt.Print("> ")
 		ipt, _ = reader.ReadString('\n')
@@ -61,11 +61,11 @@ mainLoop:
 
 func run(quit chan bool, fans *[]manage.TheFan) {
 	// Enable manual control
-	for _, fan := range *fans {
+	/*for _, fan := range *fans {
 		if !fan.ControlEnabled() {
 			fan.ToggleControl()
 		}
-	}
+	}*/
 	var destRPM int
 	for true {
 		select {
@@ -88,15 +88,15 @@ func run(quit chan bool, fans *[]manage.TheFan) {
 					setIfNotSet(fan, destRPM)
 
 				case config.Modes.TempRPM:
-					thisConfig, err := config.TempPercent[fan.Name()]
+					thisConfig, err := config.TempRPM[fan.Name()]
 					if !err {
 						panic("No config for" + fan.Name())
 					}
-					destRPM = best_level_according_to_temp(thisConfig)
+					destRPM = best_level_according_to_temp(thisConfig, config.TempLevelRPM[fan.Name()])
 					setIfNotSet(fan, destRPM)
 
 				case config.Modes.TempPercent:
-					destPercent := best_level_according_to_temp(config.TempPercent[fan.Name()])
+					destPercent := best_level_according_to_temp(config.TempPercent[fan.Name()], config.TempLevelPercent[fan.Name()])
 					destRPM = fan.MaxRPM() * destPercent / 100
 					if fan.MaxRPM() <= destRPM {
 						destRPM = fan.MaxRPM()
@@ -115,15 +115,32 @@ func setIfNotSet(fan manage.TheFan, destRPM int) {
 	}
 }
 
-func best_level_according_to_temp(thisConfig map[int]int) int {
+func best_level_according_to_temp(thisConfig map[int]int, tempLevels []int) int {
 	curTemp := manage.CPUTemp()
-	lowestAcceptable := 65535 // Just a big number
-	destLevel := 65535        // Just a big number
-	for k, v := range thisConfig {
-		if curTemp <= k && k <= lowestAcceptable {
-			destLevel = v
-			lowestAcceptable = k
+	destTempLevelIndex := -1
+	for i:=0;i<len(tempLevels);i++{
+		if curTemp <= tempLevels[i] {
+			destTempLevelIndex=i
+			break
 		}
 	}
-	return destLevel
+	
+	if destTempLevelIndex == -1 {
+		
+	}
+	
+	output:=thisConfig[tempLevels[destTempLevelIndex]]
+	
+	if tempLevels[destTempLevelIndex] != curTemp && destTempLevelIndex != 0 {
+		//output = thisConfig[tempLevels[destTempLevelIndex]]+((thisConfig[tempLevels[destTempLevelIndex+1]] - thisConfig[tempLevels[destTempLevelIndex]]) / (tempLevels[destTempLevelIndex+1] - tempLevels[destTempLevelIndex]) * (tempLevels[destTempLevelIndex+1] - tempLevels[destTempLevelIndex]))
+		hiTemp:=tempLevels[destTempLevelIndex]
+		loTemp:=tempLevels[destTempLevelIndex-1]
+		hiLevel:=thisConfig[hiTemp]
+		loLevel:=thisConfig[loTemp]
+		
+		output = loLevel + ((curTemp - loTemp) * ((hiLevel-loLevel) / (hiTemp - loTemp)))
+	}
+	
+	// fmt.Println( destLevel+((secondLowLevel - destLevel) / (secondLowTempLevel - lowestAcceptable) * (curTemp - lowestAcceptable)))
+	return output
 }

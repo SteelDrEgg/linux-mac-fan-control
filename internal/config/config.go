@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"strconv"
+	"sort"
 )
 
 type modes struct {
@@ -28,6 +29,8 @@ var (
 	FixedRPM     int
 	TempPercent  map[string]map[int]int
 	TempRPM      map[string]map[int]int
+	TempLevelRPM	 map[string][]int
+	TempLevelPercent map[string][]int
 )
 
 func init() {
@@ -79,18 +82,20 @@ func loadConfig() {
 	if viper.InConfig("TempPercent") {
 		tp := viper.Get("TempPercent").([]interface{})
 		TempPercent = make(map[string]map[int]int)
-		parseTempConfig(TempPercent, tp)
+		TempLevelPercent = make(map[string][]int)
+		parseTempConfig(TempPercent, tp, TempLevelPercent)
 	}
 
 	if viper.InConfig("TempRPM") {
 		tr := viper.Get("TempRPM").([]interface{})
 		TempRPM = make(map[string]map[int]int)
-		parseTempConfig(TempRPM, tr)
+		TempLevelRPM = make(map[string][]int)
+		parseTempConfig(TempRPM, tr, TempLevelRPM)
 	}
 
 }
 
-func parseTempConfig(target map[string]map[int]int, set []interface{}) {
+func parseTempConfig(target map[string]map[int]int, set []interface{}, tempLevels map[string][]int) {
 	for _, m := range set {
 		temp := make(map[int]int)
 		fanName := ""
@@ -100,8 +105,10 @@ func parseTempConfig(target map[string]map[int]int, set []interface{}) {
 				fanName = fmt.Sprintf("%s%v", k, v)
 			} else {
 				temp[temperature] = v.(int)
+				tempLevels[fanName] = append(tempLevels[fanName], temperature)
 			}
 		}
+		sort.Ints(tempLevels[fanName])
 		target[fanName] = temp
 	}
 }
